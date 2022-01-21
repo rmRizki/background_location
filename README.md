@@ -1,6 +1,6 @@
 # background_location
 
-![Main Workflow](https://github.com/rmRizki/background_location/actions/workflows/main.yml/badge.svg)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/rmrizki/background_location/Build)
 
 Flutter App to demonstrate how to get user location in background
 
