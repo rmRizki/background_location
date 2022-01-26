@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:math';
 import 'dart:ui';
-
+import 'package:background_location/helper.dart';
+import 'package:background_location/location.dart';
 import 'package:background_locator/location_dto.dart';
 import 'package:flutter/foundation.dart';
-
-import 'file_manager.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LocationServiceRepository {
-  static final LocationServiceRepository _instance = LocationServiceRepository._();
+  static final LocationServiceRepository _instance =
+      LocationServiceRepository._();
 
   LocationServiceRepository._();
 
@@ -22,6 +23,7 @@ class LocationServiceRepository {
   int _count = -1;
 
   Future<void> init(Map<dynamic, dynamic> params) async {
+    Hive.init((await getApplicationDocumentsDirectory()).path);
     debugPrint("***********Init callback handler");
     if (params.containsKey('countInit')) {
       dynamic tmpCount = params['countInit'];
@@ -38,7 +40,6 @@ class LocationServiceRepository {
       _count = 0;
     }
     debugPrint("$_count");
-    await setLogLabel("start");
     final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
     send?.send(null);
   }
@@ -46,47 +47,22 @@ class LocationServiceRepository {
   Future<void> dispose() async {
     debugPrint("***********Dispose callback handler");
     debugPrint("$_count");
-    await setLogLabel("end");
     final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
     send?.send(null);
   }
 
   Future<void> callback(LocationDto locationDto) async {
     debugPrint('$_count location in dart: ${locationDto.toString()}');
-    await setLogPosition(_count, locationDto);
     final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
-    send?.send(locationDto);
+
+    final location = LocationModel(
+      locationDto,
+      Helper.formatDateLog(DateTime.now()),
+    );
+
+    var box = await Hive.openBox('location');
+    box.add(location.toJson());
+    send?.send(location);
     _count++;
-  }
-
-  static Future<void> setLogLabel(String label) async {
-    final date = DateTime.now();
-    await FileManager.writeToLogFile(
-        '------------\n$label: ${formatDateLog(date)}\n------------\n');
-  }
-
-  static Future<void> setLogPosition(int count, LocationDto data) async {
-    final date = DateTime.now();
-    await FileManager.writeToLogFile(
-        '$count : ${formatDateLog(date)} --> ${formatLog(data)} --- isMocked: ${data.isMocked}\n');
-  }
-
-  static double dp(double val, int places) {
-    num mod = pow(10.0, places);
-    return ((val * mod).round().toDouble() / mod);
-  }
-
-  static String formatDateLog(DateTime date) {
-    return date.hour.toString() +
-        ":" +
-        date.minute.toString() +
-        ":" +
-        date.second.toString();
-  }
-
-  static String formatLog(LocationDto locationDto) {
-    return dp(locationDto.latitude, 4).toString() +
-        " " +
-        dp(locationDto.longitude, 4).toString();
   }
 }

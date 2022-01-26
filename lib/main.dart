@@ -2,19 +2,29 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:background_location/helper.dart';
+import 'package:background_location/location.dart';
 import 'package:background_locator/background_locator.dart';
 import 'package:background_locator/location_dto.dart';
 import 'package:background_locator/settings/android_settings.dart';
 import 'package:background_locator/settings/ios_settings.dart';
 import 'package:background_locator/settings/locator_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'file_manager.dart';
 import 'location_callback_handler.dart';
 import 'location_service_repository.dart';
 
-void main() => runApp(const MyApp());
+/// TODO :
+/// 1. tambah settingan untuk atur interval
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -26,9 +36,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final ReceivePort _port = ReceivePort();
 
-  String _logStr = '';
   bool? _isRunning;
   LocationDto? _lastLocation;
+  final List<LocationModel> _locationList = [];
 
   @override
   void initState() {
@@ -57,16 +67,15 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  Future<void> _updateUI(LocationDto? data) async {
-    final log = await FileManager.readLogFile();
-
-    await _updateNotificationText(data);
-
+  Future<void> _updateUI(LocationModel? location) async {
+    await _updateNotificationText(location?.locationDto);
     setState(() {
-      if (data != null) {
-        _lastLocation = data;
+      if (location != null) {
+        _lastLocation = location.locationDto;
+        _locationList.add(
+          location,
+        );
       }
-      _logStr = log;
     });
   }
 
@@ -84,7 +93,12 @@ class _MyAppState extends State<MyApp> {
   Future<void> _initPlatformState() async {
     debugPrint('Initializing...');
     await BackgroundLocator.initialize();
-    _logStr = await FileManager.readLogFile();
+    var box = await Hive.openBox('location');
+    _locationList.clear();
+    _locationList.addAll(
+      box.toMap().entries.map(
+          (e) => LocationModel.fromJson(Map<String, dynamic>.from(e.value))),
+    );
     debugPrint('Initialization done');
     final isServiceRunning = await BackgroundLocator.isServiceRunning();
     setState(() {
@@ -112,7 +126,6 @@ class _MyAppState extends State<MyApp> {
       });
     } else {
       debugPrint('Error check permission');
-      // show error
     }
   }
 
@@ -197,10 +210,11 @@ class _MyAppState extends State<MyApp> {
       width: double.maxFinite,
       child: ElevatedButton(
         child: const Text('Clear Log'),
-        onPressed: () {
-          FileManager.clearLogFile();
+        onPressed: () async {
+          final box = await Hive.openBox('location');
+          box.clear();
           setState(() {
-            _logStr = '';
+            _locationList.clear();
           });
         },
       ),
@@ -214,10 +228,6 @@ class _MyAppState extends State<MyApp> {
       }
     }
     final status = Text("Status: $msgStatus");
-
-    final log = Text(
-      _logStr,
-    );
 
     String lastCoordinate = '';
     if (_lastLocation != null) {
@@ -235,6 +245,7 @@ class _MyAppState extends State<MyApp> {
           width: double.maxFinite,
           padding: const EdgeInsets.all(22),
           child: SingleChildScrollView(
+            primary: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
@@ -244,11 +255,53 @@ class _MyAppState extends State<MyApp> {
                 clear,
                 status,
                 lastLocation,
-                log,
+                const SizedBox(height: 8),
+                ListView.builder(
+                  itemBuilder: (context, index) {
+                    return _buildLocationItem(_locationList[index]);
+                  },
+                  itemCount: _locationList.length,
+                  primary: false,
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  reverse: true,
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLocationItem(LocationModel locationModel) {
+    final labelText = Helper.setLogPosition(locationModel);
+    final latitude = locationModel.locationDto.latitude;
+    final longitude = locationModel.locationDto.longitude;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: Colors.black12,
+      child: ListTile(
+        dense: true,
+        title: Text(labelText, style: Theme.of(context).textTheme.bodyText2),
+        onTap: () async {
+          if (await MapLauncher.isMapAvailable(MapType.google) ?? false) {
+            await MapLauncher.showMarker(
+              mapType: MapType.google,
+              coords: Coords(latitude, longitude),
+              title: "Detected Location",
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Failed to open map',
+                ),
+              ),
+            );
+          }
+        },
+        trailing: const Icon(Icons.call_made_sharp, size: 16),
       ),
     );
   }
