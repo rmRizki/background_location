@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
@@ -17,28 +18,37 @@ import 'package:permission_handler/permission_handler.dart';
 import 'location_callback_handler.dart';
 import 'location_service_repository.dart';
 
-/// TODO :
-/// 1. tambah settingan untuk atur interval
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  _MyAppState createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: HomePage(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final ReceivePort _port = ReceivePort();
 
-  bool? _isRunning;
+  bool _isRunning = false;
   LocationDto? _lastLocation;
   final List<LocationModel> _locationList = [];
+  int? _locationUpdateInterval = 5;
 
   @override
   void initState() {
@@ -116,10 +126,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onStart() async {
+    if (_isRunning) return;
     if (await _checkLocationPermission()) {
-      await _startLocator();
-      final isServiceRunning = await BackgroundLocator.isServiceRunning();
+      if (Platform.isAndroid) {
+        final result = await _showInputIntervalDialog(context);
+        if (result != null && result) {
+          await _startLocator();
+        }
+      } else {
+        await _startLocator();
+      }
 
+      final isServiceRunning = await BackgroundLocator.isServiceRunning();
       setState(() {
         _isRunning = isServiceRunning;
         _lastLocation = null;
@@ -164,12 +182,12 @@ class _MyAppState extends State<MyApp> {
       iosSettings: const IOSSettings(
           accuracy: LocationAccuracy.NAVIGATION, distanceFilter: 0),
       autoStop: false,
-      androidSettings: const AndroidSettings(
+      androidSettings: AndroidSettings(
         accuracy: LocationAccuracy.NAVIGATION,
-        interval: 5,
+        interval: _locationUpdateInterval ?? 5,
         distanceFilter: 0,
         client: LocationClient.google,
-        androidNotificationSettings: AndroidNotificationSettings(
+        androidNotificationSettings: const AndroidNotificationSettings(
           notificationChannelName: 'Location tracking',
           notificationTitle: 'Start Location Tracking',
           notificationMsg: 'Track location in background',
@@ -182,95 +200,123 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<bool?> _showInputIntervalDialog(BuildContext context) async {
+    return await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Set location request interval'),
+            content: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _locationUpdateInterval = int.tryParse(value);
+                });
+              },
+              decoration: const InputDecoration(
+                hintText: "Interval in seconds (ex: 5)",
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
+              TextButton(
+                child: const Text('Ok'),
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
-    const info = Text(
-      'You need to enable Location Permission : Allow all the time to have access for this app ',
-      textAlign: TextAlign.center,
-    );
-    final start = SizedBox(
-      width: double.maxFinite,
-      child: ElevatedButton(
-        child: const Text('Start'),
-        onPressed: () {
-          _onStart();
-        },
-      ),
-    );
-    final stop = SizedBox(
-      width: double.maxFinite,
-      child: ElevatedButton(
-        child: const Text('Stop'),
-        onPressed: () {
-          _onStop();
-        },
-      ),
-    );
-    final clear = SizedBox(
-      width: double.maxFinite,
-      child: ElevatedButton(
-        child: const Text('Clear Log'),
-        onPressed: () async {
-          final box = await Hive.openBox('location');
-          box.clear();
-          setState(() {
-            _locationList.clear();
-          });
-        },
-      ),
-    );
     String msgStatus = "-";
-    if (_isRunning != null) {
-      if (_isRunning!) {
-        msgStatus = 'Is running';
-      } else {
-        msgStatus = 'Is not running';
-      }
+    if (_isRunning) {
+      msgStatus = 'Is running';
+    } else {
+      msgStatus = 'Is not running';
     }
-    final status = Text("Status: $msgStatus");
-
     String lastCoordinate = '';
     if (_lastLocation != null) {
       lastCoordinate =
           "Last Location = lat: ${_lastLocation?.latitude}, long: ${_lastLocation?.longitude}";
     }
-    final lastLocation = Text(lastCoordinate);
-
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter background Locator'),
-        ),
-        body: Container(
-          width: double.maxFinite,
-          padding: const EdgeInsets.all(22),
-          child: SingleChildScrollView(
-            primary: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                info,
-                start,
-                stop,
-                clear,
-                status,
-                lastLocation,
-                const SizedBox(height: 8),
-                ListView.builder(
-                  itemBuilder: (context, index) {
-                    return _buildLocationItem(_locationList[index]);
-                  },
-                  itemCount: _locationList.length,
-                  primary: false,
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  reverse: true,
-                ),
-              ],
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Flutter background Locator'),
+      ),
+      body: Container(
+        width: double.maxFinite,
+        padding: const EdgeInsets.all(22),
+        child: SingleChildScrollView(
+          primary: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              _buildTextInfo(
+                'You need to enable Location Permission : Allow all the time to have access for this app',
+              ),
+              _buildButton(label: 'Start', onPressed: () => _onStart()),
+              _buildButton(label: 'Stop', onPressed: () => _onStop()),
+              _buildButton(
+                label: 'Clear Log',
+                onPressed: () async {
+                  final box = await Hive.openBox('location');
+                  box.clear();
+                  setState(() {
+                    _locationList.clear();
+                  });
+                },
+              ),
+              _buildTextInfo('Status: $msgStatus'),
+              _buildTextInfo(lastCoordinate),
+              const SizedBox(height: 8),
+              _buildLocationList(),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextInfo(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: double.maxFinite,
+      child: ElevatedButton(
+        child: Text(label),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildLocationList() {
+    return ListView.builder(
+      itemBuilder: (context, index) {
+        return _buildLocationItem(_locationList[index]);
+      },
+      itemCount: _locationList.length,
+      primary: false,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      reverse: true,
     );
   }
 
