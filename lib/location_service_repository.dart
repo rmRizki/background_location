@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:background_location/helper.dart';
 import 'package:background_location/location.dart';
 import 'package:background_locator/location_dto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationServiceRepository {
   static final LocationServiceRepository _instance =
@@ -22,9 +22,20 @@ class LocationServiceRepository {
 
   int _count = -1;
 
+  SharedPreferences? _sharedPreferences;
+  final List<LocationModel> _locationList = [];
+
   Future<void> init(Map<dynamic, dynamic> params) async {
-    Hive.init((await getApplicationDocumentsDirectory()).path);
     debugPrint("***********Init callback handler");
+    _sharedPreferences = await SharedPreferences.getInstance();
+    final locationJsonString =
+        _sharedPreferences?.getStringList('location') ?? [];
+    if (locationJsonString.isNotEmpty) {
+      _locationList.clear();
+      _locationList.addAll(
+        locationJsonString.map((e) => LocationModel.fromJson(jsonDecode(e))),
+      );
+    }
     if (params.containsKey('countInit')) {
       dynamic tmpCount = params['countInit'];
       if (tmpCount is double) {
@@ -60,8 +71,12 @@ class LocationServiceRepository {
       Helper.formatDateLog(DateTime.now()),
     );
 
-    var box = await Hive.openBox('location');
-    box.add(location.toJson());
+    _locationList.add(location);
+    _sharedPreferences?.setStringList(
+      'location',
+      List<String>.from(_locationList.map((e) => jsonEncode(e.toJson()))),
+    );
+
     send?.send(location);
     _count++;
   }

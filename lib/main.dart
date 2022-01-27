@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
@@ -11,18 +12,14 @@ import 'package:background_locator/settings/android_settings.dart';
 import 'package:background_locator/settings/ios_settings.dart';
 import 'package:background_locator/settings/locator_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'location_callback_handler.dart';
 import 'location_service_repository.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -49,6 +46,7 @@ class _HomePageState extends State<HomePage> {
   LocationDto? _lastLocation;
   final List<LocationModel> _locationList = [];
   int? _locationUpdateInterval = 5;
+  SharedPreferences? _sharedPreferences;
 
   @override
   void initState() {
@@ -103,12 +101,16 @@ class _HomePageState extends State<HomePage> {
   Future<void> _initPlatformState() async {
     debugPrint('Initializing...');
     await BackgroundLocator.initialize();
-    var box = await Hive.openBox('location');
-    _locationList.clear();
-    _locationList.addAll(
-      box.toMap().entries.map(
-          (e) => LocationModel.fromJson(Map<String, dynamic>.from(e.value))),
-    );
+    _sharedPreferences = await SharedPreferences.getInstance();
+    final locationJsonString =
+        _sharedPreferences?.getStringList('location') ?? [];
+    if (locationJsonString.isNotEmpty) {
+      _locationList.clear();
+      _locationList.addAll(
+        locationJsonString.map((e) => LocationModel.fromJson(jsonDecode(e))),
+      );
+    }
+
     debugPrint('Initialization done');
     final isServiceRunning = await BackgroundLocator.isServiceRunning();
     setState(() {
@@ -269,8 +271,7 @@ class _HomePageState extends State<HomePage> {
               _buildButton(
                 label: 'Clear Log',
                 onPressed: () async {
-                  final box = await Hive.openBox('location');
-                  box.clear();
+                  _sharedPreferences?.clear();
                   setState(() {
                     _locationList.clear();
                   });
