@@ -102,12 +102,12 @@ class _HomePageState extends State<HomePage> {
     debugPrint('Initializing...');
     await BackgroundLocator.initialize();
     _sharedPreferences = await SharedPreferences.getInstance();
-    final locationJsonString =
+    final encodedLocationList =
         _sharedPreferences?.getStringList('location') ?? [];
-    if (locationJsonString.isNotEmpty) {
+    if (encodedLocationList.isNotEmpty) {
       _locationList.clear();
       _locationList.addAll(
-        locationJsonString.map((e) => LocationModel.fromJson(jsonDecode(e))),
+        encodedLocationList.map((e) => LocationModel.fromJson(jsonDecode(e))),
       );
     }
 
@@ -138,9 +138,9 @@ class _HomePageState extends State<HomePage> {
       } else {
         await _startLocator();
       }
-
       final isServiceRunning = await BackgroundLocator.isServiceRunning();
       setState(() {
+        _locationList.clear();
         _isRunning = isServiceRunning;
         _lastLocation = null;
       });
@@ -267,16 +267,18 @@ class _HomePageState extends State<HomePage> {
                 'You need to enable Location Permission : Allow all the time to have access for this app',
               ),
               _buildButton(label: 'Start', onPressed: () => _onStart()),
-              _buildButton(label: 'Stop', onPressed: () => _onStop()),
-              _buildButton(
-                label: 'Clear Log',
-                onPressed: () async {
-                  _sharedPreferences?.clear();
-                  setState(() {
-                    _locationList.clear();
-                  });
-                },
-              ),
+              if (_isRunning)
+                _buildButton(label: 'Stop', onPressed: () => _onStop()),
+              if (!_isRunning)
+                _buildButton(
+                  label: 'Clear Log',
+                  onPressed: () async {
+                    await _sharedPreferences?.clear();
+                    setState(() {
+                      _locationList.clear();
+                    });
+                  },
+                ),
               _buildTextInfo('Status: $msgStatus'),
               _buildTextInfo(lastCoordinate),
               const SizedBox(height: 8),
