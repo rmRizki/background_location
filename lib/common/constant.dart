@@ -1,6 +1,7 @@
 class TableName {
   static const ticket = 'ticket';
   static const checklist = 'checklist';
+  static const history = 'history';
 }
 
 enum ArrivalStatus {
