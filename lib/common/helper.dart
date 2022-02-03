@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:background_location/location.dart';
+import 'package:background_location/data/models/location.dart';
 import 'package:background_locator/location_dto.dart';
 
 class Helper {

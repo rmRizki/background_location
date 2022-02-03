@@ -4,8 +4,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:background_location/helper.dart';
-import 'package:background_location/location.dart';
+import 'package:background_location/common/helper.dart';
+import 'package:background_location/data/models/location.dart';
 import 'package:background_locator/background_locator.dart';
 import 'package:background_locator/location_dto.dart';
 import 'package:background_locator/settings/android_settings.dart';
@@ -16,8 +16,8 @@ import 'package:map_launcher/map_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'location_callback_handler.dart';
-import 'location_service_repository.dart';
+import 'data/location/location_callback_handler.dart';
+import 'data/location/location_service_repository.dart';
 
 void main() => runApp(const MyApp());
 
@@ -188,7 +188,7 @@ class _HomePageState extends State<HomePage> {
       androidSettings: AndroidSettings(
         accuracy: LocationAccuracy.NAVIGATION,
         interval: _locationUpdateInterval ?? 5,
-        distanceFilter: 0,
+        distanceFilter: 2,
         client: LocationClient.google,
         androidNotificationSettings: const AndroidNotificationSettings(
           notificationChannelName: 'Location tracking',
