@@ -48,6 +48,14 @@ class DatabaseHelper {
         ticket_id INTEGER
       );
     ''');
+    await db.execute('''
+      CREATE TABLE ${TableName.history} (
+        id INTEGER PRIMARY KEY,
+        action TEXT,
+        time TEXT,
+        ticket_id INTEGER
+      );
+    ''');
   }
 
   Future<int> insertData(String table, Map<String, dynamic> value) async {
