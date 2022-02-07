@@ -168,7 +168,10 @@ class _LocationLogPageState extends State<LocationLogPage> {
       initDataCallback: data,
       disposeCallback: LocationCallbackHandler.disposeCallback,
       iosSettings: const IOSSettings(
-          accuracy: LocationAccuracy.NAVIGATION, distanceFilter: 0),
+        accuracy: LocationAccuracy.NAVIGATION,
+        distanceFilter: 2,
+        showsBackgroundLocationIndicator: true,
+      ),
       autoStop: false,
       androidSettings: AndroidSettings(
         accuracy: LocationAccuracy.NAVIGATION,
@@ -239,7 +242,7 @@ class _LocationLogPageState extends State<LocationLogPage> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter background Locator'),
+        title: const Text('Background Locator'),
       ),
       body: Container(
         width: double.maxFinite,
