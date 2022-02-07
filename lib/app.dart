@@ -1,5 +1,5 @@
+import 'package:background_location/pages/ticket_page.dart';
 import 'package:flutter/material.dart';
-import 'package:background_location/pages/location_log_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -8,7 +8,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(primarySwatch: Colors.green),
-      home: const LocationLogPage(),
+      home: const TicketPage(),
     );
   }
 }
