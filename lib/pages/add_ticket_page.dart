@@ -1,5 +1,6 @@
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
+import 'package:background_location/data/models/check_list.dart';
 import 'package:background_location/data/models/ticket.dart';
 import 'package:flutter/material.dart';
 
@@ -158,16 +159,36 @@ class _AddTicketPageState extends State<AddTicketPage> {
       ),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
             try {
-              _databaseHelper.insertData(
+              final ticketId = await _databaseHelper.insertData(
                 TableName.ticket,
                 Ticket(
                   title: _titleController.text,
                   description: _descriptionController.text,
                 ).toJson(),
               );
+              for (var element in _departChecklistController) {
+                await _databaseHelper.insertData(
+                  TableName.checklist,
+                  CheckListItem(
+                    title: element.text,
+                    type: ChecklistType.depart.name,
+                    ticketId: ticketId,
+                  ).toJson(),
+                );
+              }
+              for (var element in _arriveChecklistController) {
+                await _databaseHelper.insertData(
+                  TableName.checklist,
+                  CheckListItem(
+                    title: element.text,
+                    type: ChecklistType.arrive.name,
+                    ticketId: ticketId,
+                  ).toJson(),
+                );
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Ticket Created')),
               );
