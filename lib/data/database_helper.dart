@@ -87,8 +87,8 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>?> getDataByQuery(
     String table, {
-    required String where,
-    required List<Object> whereArgs,
+    String? where,
+    List<Object>? whereArgs,
   }) async {
     final db = await database;
     final results = await db!.query(
@@ -129,8 +129,8 @@ class DatabaseHelper {
 
   Future<int> removeDataByQuery(
     String table, {
-    required String where,
-    required List<Object> whereArgs,
+    String? where,
+    List<Object>? whereArgs,
   }) async {
     final db = await database;
     return await db!.delete(
