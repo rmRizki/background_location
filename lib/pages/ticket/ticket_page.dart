@@ -1,9 +1,9 @@
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/ticket.dart';
-import 'package:background_location/pages/location_log_page.dart';
-import 'package:background_location/pages/open_ticket_page.dart';
-import 'package:background_location/pages/solved_ticket_page.dart';
+import 'package:background_location/pages/location_log/location_log_page.dart';
+import 'package:background_location/pages/ticket/open/open_ticket_page.dart';
+import 'package:background_location/pages/ticket/solved/solved_ticket_page.dart';
 import 'package:flutter/material.dart';
 
 class TicketPage extends StatefulWidget {

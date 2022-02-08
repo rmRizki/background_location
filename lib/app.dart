@@ -1,4 +1,4 @@
-import 'package:background_location/pages/ticket_page.dart';
+import 'package:background_location/pages/ticket/ticket_page.dart';
 import 'package:flutter/material.dart';
 
 class MyApp extends StatelessWidget {

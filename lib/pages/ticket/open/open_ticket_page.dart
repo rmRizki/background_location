@@ -1,7 +1,7 @@
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/ticket.dart';
-import 'package:background_location/pages/add_ticket_page.dart';
+import 'package:background_location/pages/ticket/add_ticket_page.dart';
 import 'package:flutter/material.dart';
 
 class OpenTicketPage extends StatefulWidget {
@@ -61,6 +61,9 @@ class _OpenTicketPageState extends State<OpenTicketPage> {
             child: Card(
               elevation: 2,
               child: ListTile(
+                onTap: () {
+                  // TODO navigate to detail ticket
+                },
                 title: Text(
                   ticket.title ?? '-',
                   overflow: TextOverflow.ellipsis,
