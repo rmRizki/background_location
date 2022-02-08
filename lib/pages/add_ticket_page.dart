@@ -38,7 +38,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Ticket')),
+      appBar: AppBar(title: const Text('Add Open Ticket')),
       body: Form(
         key: _formKey,
         child: Column(
@@ -167,6 +167,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                 Ticket(
                   title: _titleController.text,
                   description: _descriptionController.text,
+                  ticketStatus: TicketStatus.open.name,
                 ).toJson(),
               );
               for (var element in _departChecklistController) {
@@ -192,6 +193,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Ticket Created')),
               );
+              Navigator.pop(context, true);
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('$e')),
