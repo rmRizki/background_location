@@ -41,6 +41,32 @@ class _TicketPageState extends State<TicketPage> {
         .length;
   }
 
+  Future<bool?> _showDeleteTicketDialog(BuildContext context) async {
+    return await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Delete All Ticket'),
+            content: const Text('Delete All Ticket Data?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
+              TextButton(
+                child: const Text('Ok'),
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +84,27 @@ class _TicketPageState extends State<TicketPage> {
             },
             icon: const Icon(Icons.location_pin),
           ),
+          IconButton(
+            onPressed: () async {
+              final isDelete = await _showDeleteTicketDialog(context);
+              if (isDelete is bool && isDelete) {
+                try {
+                  await _databaseHelper.removeDataByQuery(TableName.ticket);
+                  await _databaseHelper.removeDataByQuery(TableName.checklist);
+                  await _databaseHelper.removeDataByQuery(TableName.history);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('All Data Deleted')),
+                  );
+                  _getCountData();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$e')),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.delete_forever),
+          ),
         ],
       ),
       body: Center(
@@ -68,15 +115,14 @@ class _TicketPageState extends State<TicketPage> {
               'Open',
               _openTicketCount,
               onTap: () async {
-                final isChanged = await Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const OpenTicketPage(),
                   ),
+                ).then(
+                  (_) => _getCountData(),
                 );
-                if (isChanged is bool && isChanged) {
-                  _getCountData();
-                }
               },
             ),
             const SizedBox(height: 24),
