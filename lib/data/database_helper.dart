@@ -33,7 +33,7 @@ class DatabaseHelper {
         title TEXT,
         description TEXT,
         arrival_status TEXT,
-        ticket_status TEXT,
+        ticket_status TEXT
       );
     ''');
     await db.execute('''
