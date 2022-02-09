@@ -20,8 +20,6 @@ class Ticket {
   String? description;
   String? arrivalStatus;
   String? ticketStatus;
-  String? latitude;
-  String? longitude;
 
   Ticket({
     this.id,
@@ -29,8 +27,6 @@ class Ticket {
     this.description,
     this.arrivalStatus,
     this.ticketStatus,
-    this.latitude,
-    this.longitude,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) => Ticket(
@@ -39,8 +35,6 @@ class Ticket {
         description: json['description'] as String?,
         arrivalStatus: json['arrival_status'] as String?,
         ticketStatus: json['ticket_status'] as String?,
-        latitude: json['latitude'] as String?,
-        longitude: json['longitude'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -49,7 +43,5 @@ class Ticket {
         'description': description,
         'arrival_status': arrivalStatus,
         'ticket_status': ticketStatus,
-        'latitude': latitude,
-        'longitude': longitude,
       };
 }

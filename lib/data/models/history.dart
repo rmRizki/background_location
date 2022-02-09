@@ -18,12 +18,16 @@ class History {
   int? id;
   String? action;
   String? time;
+  String? latitude;
+  String? longitude;
   int? ticketId;
 
   History({
     this.id,
     this.action,
     this.time,
+    this.latitude,
+    this.longitude,
     this.ticketId,
   });
 
@@ -31,6 +35,8 @@ class History {
         id: json['id'] as int?,
         action: json['action'] as String?,
         time: json['time'] as String?,
+        latitude: json['latitude'] as String?,
+        longitude: json['longitude'] as String?,
         ticketId: json['ticket_id'] as int?,
       );
 
@@ -38,6 +44,8 @@ class History {
         'id': id,
         'action': action,
         'time': time,
+        'latitude': latitude,
+        'longitude': longitude,
         'ticket_id': ticketId,
       };
 }

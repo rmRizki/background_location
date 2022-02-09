@@ -34,8 +34,6 @@ class DatabaseHelper {
         description TEXT,
         arrival_status TEXT,
         ticket_status TEXT,
-        latitude TEXT,
-        longitude TEXT
       );
     ''');
     await db.execute('''
@@ -53,6 +51,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY,
         action TEXT,
         time TEXT,
+        latitude TEXT,
+        longitude TEXT,
         ticket_id INTEGER
       );
     ''');
