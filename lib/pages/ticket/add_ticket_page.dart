@@ -168,6 +168,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                   title: _titleController.text,
                   description: _descriptionController.text,
                   ticketStatus: TicketStatus.open.name,
+                  arrivalStatus: ArrivalStatus.standby.name,
                 ).toJson(),
               );
               for (var element in _departChecklistController) {
@@ -177,6 +178,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                     title: element.text,
                     type: ChecklistType.depart.name,
                     ticketId: ticketId,
+                    status: CheckListStatus.undone.name,
                   ).toJson(),
                 );
               }
@@ -187,6 +189,7 @@ class _AddTicketPageState extends State<AddTicketPage> {
                     title: element.text,
                     type: ChecklistType.arrive.name,
                     ticketId: ticketId,
+                    status: CheckListStatus.undone.name,
                   ).toJson(),
                 );
               }
