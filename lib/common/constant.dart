@@ -8,6 +8,7 @@ enum ArrivalStatus {
   standby,
   departed,
   arrived,
+  done,
 }
 
 enum TicketStatus {
