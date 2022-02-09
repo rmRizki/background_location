@@ -1,7 +1,11 @@
+import 'package:background_location/data/models/ticket.dart';
 import 'package:flutter/material.dart';
 
 class ArriveDetailTicketPage extends StatefulWidget {
-  const ArriveDetailTicketPage({Key? key}) : super(key: key);
+  const ArriveDetailTicketPage({Key? key, required this.ticket})
+      : super(key: key);
+
+  final Ticket ticket;
 
   @override
   _ArriveDetailTicketPageState createState() => _ArriveDetailTicketPageState();

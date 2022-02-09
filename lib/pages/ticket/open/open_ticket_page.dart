@@ -65,26 +65,26 @@ class _OpenTicketPageState extends State<OpenTicketPage> {
         });
   }
 
-  Future<void> _navigateToDetail(String? arrivalStatus) async {
+  Future<void> _navigateToDetail(String? arrivalStatus, Ticket ticket) async {
     if (arrivalStatus == describeEnum(ArrivalStatus.standby)) {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const OpenDetailTicketPage(),
+          builder: (context) => OpenDetailTicketPage(ticket: ticket),
         ),
       );
     } else if (arrivalStatus == describeEnum(ArrivalStatus.departed)) {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const DepartDetailTicketPage(),
+          builder: (context) => DepartDetailTicketPage(ticket: ticket),
         ),
       );
     } else if (arrivalStatus == describeEnum(ArrivalStatus.arrived)) {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const ArriveDetailTicketPage(),
+          builder: (context) => ArriveDetailTicketPage(ticket: ticket),
         ),
       );
     }
@@ -125,7 +125,7 @@ class _OpenTicketPageState extends State<OpenTicketPage> {
                   if (_inProgressExist && !inProgressTicket) {
                     await _showOpenWarningDialog();
                   } else {
-                    await _navigateToDetail(arrivalStatus).then(
+                    await _navigateToDetail(arrivalStatus, ticket).then(
                       (_) => _getTicketData(),
                     );
                   }
