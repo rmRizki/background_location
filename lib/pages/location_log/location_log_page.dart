@@ -56,11 +56,6 @@ class _LocationLogPageState extends State<LocationLogPage> {
     _initPlatformState();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> _updateUI(LocationModel? location) async {
     await _updateNotificationText(location?.locationDto);
     setState(() {
