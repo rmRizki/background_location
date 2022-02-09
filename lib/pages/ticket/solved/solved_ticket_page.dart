@@ -1,6 +1,7 @@
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/ticket.dart';
+import 'package:background_location/pages/ticket/solved/solved_detail_ticket_page.dart';
 import 'package:flutter/material.dart';
 
 class SolvedTicketPage extends StatefulWidget {
@@ -34,6 +35,15 @@ class _SolvedTicketPageState extends State<SolvedTicketPage> {
     });
   }
 
+  Future<void> _navigateToDetail(Ticket ticket) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SolvedDetailTicketPage(ticket: ticket),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +57,7 @@ class _SolvedTicketPageState extends State<SolvedTicketPage> {
             child: Card(
               elevation: 2,
               child: ListTile(
+                onTap: () => _navigateToDetail(ticket),
                 title: Text(
                   ticket.title ?? '-',
                   overflow: TextOverflow.ellipsis,
