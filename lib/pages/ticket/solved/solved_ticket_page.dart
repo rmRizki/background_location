@@ -29,6 +29,7 @@ class _SolvedTicketPageState extends State<SolvedTicketPage> {
     );
     final tickets = TicketList.fromJson(ticketMap).data ?? [];
     setState(() {
+      _solvedTicketList.clear();
       _solvedTicketList.addAll(tickets);
     });
   }
