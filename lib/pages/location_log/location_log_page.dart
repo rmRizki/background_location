@@ -5,17 +5,12 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:background_location/common/helper.dart';
-import 'package:background_location/data/location/location_callback_handler.dart';
+import 'package:background_location/data/location/background_locator_helper.dart';
 import 'package:background_location/data/location/location_service_repository.dart';
 import 'package:background_location/data/models/location.dart';
-import 'package:background_locator/background_locator.dart';
 import 'package:background_locator/location_dto.dart';
-import 'package:background_locator/settings/android_settings.dart';
-import 'package:background_locator/settings/ios_settings.dart';
-import 'package:background_locator/settings/locator_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:map_launcher/map_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationLogPage extends StatefulWidget {
@@ -28,6 +23,7 @@ class LocationLogPage extends StatefulWidget {
 class _LocationLogPageState extends State<LocationLogPage> {
   final ReceivePort _port = ReceivePort();
 
+  final _backgroundLocatorHelper = BackgroundLocatorHelper();
   bool _isRunning = false;
   LocationDto? _lastLocation;
   final List<LocationModel> _locationList = [];
@@ -37,16 +33,19 @@ class _LocationLogPageState extends State<LocationLogPage> {
   @override
   void initState() {
     super.initState();
-
     if (IsolateNameServer.lookupPortByName(
-            LocationServiceRepository.isolateName) !=
+          LocationServiceRepository.isolateName,
+        ) !=
         null) {
       IsolateNameServer.removePortNameMapping(
-          LocationServiceRepository.isolateName);
+        LocationServiceRepository.isolateName,
+      );
     }
 
     IsolateNameServer.registerPortWithName(
-        _port.sendPort, LocationServiceRepository.isolateName);
+      _port.sendPort,
+      LocationServiceRepository.isolateName,
+    );
 
     _port.listen(
       (dynamic data) async {
@@ -57,31 +56,20 @@ class _LocationLogPageState extends State<LocationLogPage> {
   }
 
   Future<void> _updateUI(LocationModel? location) async {
-    await _updateNotificationText(location?.locationDto);
+    await _backgroundLocatorHelper.updateNotificationText(
+      location?.locationDto,
+    );
     setState(() {
       if (location != null) {
         _lastLocation = location.locationDto;
-        _locationList.add(
-          location,
-        );
+        _locationList.add(location);
       }
     });
   }
 
-  Future<void> _updateNotificationText(LocationDto? data) async {
-    if (data == null) {
-      return;
-    }
-
-    await BackgroundLocator.updateNotificationText(
-        title: "new location received",
-        msg: "${DateTime.now()}",
-        bigMsg: "${data.latitude}, ${data.longitude}");
-  }
-
   Future<void> _initPlatformState() async {
     debugPrint('Initializing...');
-    await BackgroundLocator.initialize();
+    await _backgroundLocatorHelper.initialize();
     _sharedPreferences = await SharedPreferences.getInstance();
     final encodedLocationList =
         _sharedPreferences?.getStringList('location') ?? [];
@@ -93,7 +81,7 @@ class _LocationLogPageState extends State<LocationLogPage> {
     }
 
     debugPrint('Initialization done');
-    final isServiceRunning = await BackgroundLocator.isServiceRunning();
+    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
     setState(() {
       _isRunning = isServiceRunning;
     });
@@ -101,8 +89,8 @@ class _LocationLogPageState extends State<LocationLogPage> {
   }
 
   void _onStop() async {
-    await BackgroundLocator.unRegisterLocationUpdate();
-    final isServiceRunning = await BackgroundLocator.isServiceRunning();
+    await _backgroundLocatorHelper.unRegisterLocationUpdate();
+    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
     setState(() {
       _isRunning = isServiceRunning;
     });
@@ -110,16 +98,19 @@ class _LocationLogPageState extends State<LocationLogPage> {
 
   void _onStart() async {
     if (_isRunning) return;
-    if (await _checkLocationPermission()) {
+    if (await _backgroundLocatorHelper.checkLocationPermission()) {
       if (Platform.isAndroid) {
         final result = await _showInputIntervalDialog(context);
         if (result != null && result) {
-          await _startLocator();
+          await _backgroundLocatorHelper.startLocator(
+            interval: _locationUpdateInterval,
+          );
         }
       } else {
-        await _startLocator();
+        await _backgroundLocatorHelper.startLocator();
       }
-      final isServiceRunning = await BackgroundLocator.isServiceRunning();
+      final isServiceRunning =
+          await _backgroundLocatorHelper.isServiceRunning();
       setState(() {
         _locationList.clear();
         _isRunning = isServiceRunning;
@@ -128,62 +119,6 @@ class _LocationLogPageState extends State<LocationLogPage> {
     } else {
       debugPrint('Error check permission');
     }
-  }
-
-  Future<bool> _checkLocationPermission() async {
-    final access = await Permission.locationAlways.status;
-    debugPrint('Location Permission : $access');
-    switch (access) {
-      case PermissionStatus.denied:
-      case PermissionStatus.restricted:
-        final permission = await Permission.locationWhenInUse.request();
-        if (permission == PermissionStatus.granted) {
-          final permissionAlways = await Permission.locationAlways.request();
-          if (permissionAlways == PermissionStatus.granted) {
-            debugPrint('Location always granted');
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      case PermissionStatus.granted:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  Future<void> _startLocator() async {
-    Map<String, dynamic> data = {'countInit': 1};
-    return await BackgroundLocator.registerLocationUpdate(
-      LocationCallbackHandler.callback,
-      initCallback: LocationCallbackHandler.initCallback,
-      initDataCallback: data,
-      disposeCallback: LocationCallbackHandler.disposeCallback,
-      iosSettings: const IOSSettings(
-        accuracy: LocationAccuracy.NAVIGATION,
-        distanceFilter: 2,
-        showsBackgroundLocationIndicator: true,
-      ),
-      autoStop: false,
-      androidSettings: AndroidSettings(
-        accuracy: LocationAccuracy.NAVIGATION,
-        interval: _locationUpdateInterval ?? 5,
-        distanceFilter: 2,
-        client: LocationClient.google,
-        androidNotificationSettings: const AndroidNotificationSettings(
-          notificationChannelName: 'Location tracking',
-          notificationTitle: 'Start Location Tracking',
-          notificationMsg: 'Track location in background',
-          notificationBigMsg:
-              'Background location is on to keep the app up-tp-date with your location. This is required for main features to work properly when the app is not running.',
-          notificationIconColor: Colors.grey,
-          notificationTapCallback: LocationCallbackHandler.notificationCallback,
-        ),
-      ),
-    );
   }
 
   Future<bool?> _showInputIntervalDialog(BuildContext context) async {
