@@ -130,15 +130,14 @@ class _TicketPageState extends State<TicketPage> {
               'Solved',
               _solvedTicketCount,
               onTap: () async {
-                final isChanged = await Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const SolvedTicketPage(),
                   ),
+                ).then(
+                  (_) => _getCountData(),
                 );
-                if (isChanged is bool && isChanged) {
-                  _getCountData();
-                }
               },
             ),
           ],
