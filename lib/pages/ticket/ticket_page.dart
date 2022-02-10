@@ -2,8 +2,12 @@ import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/ticket.dart';
 import 'package:background_location/pages/location_log/location_log_page.dart';
+import 'package:background_location/pages/ticket/open/arrive_detail_ticket_page.dart';
+import 'package:background_location/pages/ticket/open/depart_detail_ticket_page.dart';
+import 'package:background_location/pages/ticket/open/open_detail_ticket_page.dart';
 import 'package:background_location/pages/ticket/open/open_ticket_page.dart';
 import 'package:background_location/pages/ticket/solved/solved_ticket_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class TicketPage extends StatefulWidget {
@@ -17,20 +21,22 @@ class _TicketPageState extends State<TicketPage> {
   final _databaseHelper = DatabaseHelper();
   int _openTicketCount = 0;
   int _solvedTicketCount = 0;
+  Ticket? _activeTicket;
 
   @override
   void initState() {
     super.initState();
-    _getCountData();
+    _getTicketData();
   }
 
-  _getCountData() async {
+  _getTicketData() async {
     final ticketMap = <String, dynamic>{};
     ticketMap['data'] = await _databaseHelper.getData(TableName.ticket);
     final tickets = TicketList.fromJson(ticketMap).data;
     setState(() {
       _openTicketCount = _getTicketCount(tickets, TicketStatus.open.name);
       _solvedTicketCount = _getTicketCount(tickets, TicketStatus.solved.name);
+      _activeTicket = _getActiveTicket(tickets);
     });
   }
 
@@ -39,6 +45,18 @@ class _TicketPageState extends State<TicketPage> {
         .where((element) => element.ticketStatus == status)
         .toList()
         .length;
+  }
+
+  Ticket? _getActiveTicket(List<Ticket>? ticketList) {
+    try {
+      return (ticketList ?? []).firstWhere(
+        (element) =>
+            element.arrivalStatus == describeEnum(ArrivalStatus.departed) ||
+            element.arrivalStatus == describeEnum(ArrivalStatus.arrived),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<bool?> _showDeleteTicketDialog(BuildContext context) async {
@@ -65,6 +83,35 @@ class _TicketPageState extends State<TicketPage> {
             ],
           );
         });
+  }
+
+  Future<void> _navigateToTicketDetail(
+    String? arrivalStatus,
+    Ticket? ticket,
+  ) async {
+    if (ticket == null) return;
+    if (arrivalStatus == describeEnum(ArrivalStatus.standby)) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OpenDetailTicketPage(ticket: ticket),
+        ),
+      );
+    } else if (arrivalStatus == describeEnum(ArrivalStatus.departed)) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DepartDetailTicketPage(ticket: ticket),
+        ),
+      );
+    } else if (arrivalStatus == describeEnum(ArrivalStatus.arrived)) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ArriveDetailTicketPage(ticket: ticket),
+        ),
+      );
+    }
   }
 
   @override
@@ -95,7 +142,7 @@ class _TicketPageState extends State<TicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('All Data Deleted')),
                   );
-                  _getCountData();
+                  _getTicketData();
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('$e')),
@@ -107,41 +154,80 @@ class _TicketPageState extends State<TicketPage> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildTicketMenu(
-              'Open',
-              _openTicketCount,
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OpenTicketPage(),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Active Ticket',
+            style: Theme.of(context).textTheme.headline5,
+          ),
+          const SizedBox(height: 8),
+          _activeTicket == null
+              ? Text(
+                  '--None--',
+                  style: Theme.of(context).textTheme.subtitle1,
+                )
+              : Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ListTile(
+                    onTap: () async {
+                      await _navigateToTicketDetail(
+                        _activeTicket?.arrivalStatus,
+                        _activeTicket,
+                      ).then(
+                        (_) => _getTicketData(),
+                      );
+                    },
+                    title: Text(
+                      _activeTicket?.title ?? '-',
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                            color: Colors.green,
+                          ),
+                    ),
+                    subtitle: Text(
+                      _activeTicket?.description ?? '-',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.navigate_next),
                   ),
-                ).then(
-                  (_) => _getCountData(),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            _buildTicketMenu(
-              'Solved',
-              _solvedTicketCount,
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SolvedTicketPage(),
-                  ),
-                ).then(
-                  (_) => _getCountData(),
-                );
-              },
-            ),
-          ],
-        ),
+                ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildTicketMenu(
+                'Open',
+                _openTicketCount,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OpenTicketPage(),
+                    ),
+                  ).then(
+                    (_) => _getTicketData(),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              _buildTicketMenu(
+                'Solved',
+                _solvedTicketCount,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SolvedTicketPage(),
+                    ),
+                  ).then(
+                    (_) => _getTicketData(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
