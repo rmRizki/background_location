@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
 
@@ -13,6 +14,7 @@ import 'package:background_location/data/models/ticket.dart';
 import 'package:background_location/pages/ticket/open/depart_detail_ticket_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OpenDetailTicketPage extends StatefulWidget {
   const OpenDetailTicketPage({Key? key, required this.ticket})
@@ -31,6 +33,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
   final _checkList = <CheckListItem>[];
   LocationModel? _lastLocation;
   bool _isLocationServiceOn = false;
+  SharedPreferences? _sharedPreferences;
 
   @override
   void initState() {
@@ -73,6 +76,17 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
   Future<void> _initPlatformState() async {
     await _backgroundLocatorHelper.initialize();
     final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
+    _sharedPreferences = await SharedPreferences.getInstance();
+    final encodedLocationList =
+        _sharedPreferences?.getStringList('location') ?? [];
+    final locationList = <LocationModel>[];
+    if (encodedLocationList.isNotEmpty) {
+      locationList.clear();
+      locationList.addAll(
+        encodedLocationList.map((e) => LocationModel.fromJson(jsonDecode(e))),
+      );
+      _lastLocation = locationList.last;
+    }
     setState(() => _isLocationServiceOn = isServiceRunning);
     if (!_isLocationServiceOn) _startLocationService();
   }
@@ -168,7 +182,8 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                 _databaseHelper.insertData(
                   TableName.history,
                   History(
-                    action: 'Checklist: ${checkListItem.title} : ${checkListItem.status}',
+                    action:
+                        'Checklist: ${checkListItem.title} : ${checkListItem.status}',
                     latitude: _lastLocation?.locationDto.latitude.toString(),
                     longitude: _lastLocation?.locationDto.longitude.toString(),
                     time: Helper.formatDateLog(DateTime.now()),
@@ -208,7 +223,8 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                   _databaseHelper.insertData(
                     TableName.history,
                     History(
-                      action: 'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
+                      action:
+                          'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
                       latitude: _lastLocation?.locationDto.latitude.toString(),
                       longitude:
                           _lastLocation?.locationDto.longitude.toString(),
