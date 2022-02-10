@@ -168,7 +168,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                 _databaseHelper.insertData(
                   TableName.history,
                   History(
-                    action: '${checkListItem.title} : ${checkListItem.status}',
+                    action: 'Checklist: ${checkListItem.title} : ${checkListItem.status}',
                     latitude: _lastLocation?.locationDto.latitude.toString(),
                     longitude: _lastLocation?.locationDto.longitude.toString(),
                     time: Helper.formatDateLog(DateTime.now()),
@@ -208,7 +208,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                   _databaseHelper.insertData(
                     TableName.history,
                     History(
-                      action: '${ticket.title} : ${ticket.arrivalStatus}',
+                      action: 'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
                       latitude: _lastLocation?.locationDto.latitude.toString(),
                       longitude:
                           _lastLocation?.locationDto.longitude.toString(),

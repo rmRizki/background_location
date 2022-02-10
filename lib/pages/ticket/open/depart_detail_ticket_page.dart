@@ -207,7 +207,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                   _databaseHelper.insertData(
                     TableName.history,
                     History(
-                      action: '${ticket.title} : ${ticket.arrivalStatus}',
+                      action: 'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
                       latitude: _lastLocation?.locationDto.latitude.toString(),
                       longitude:
                           _lastLocation?.locationDto.longitude.toString(),
