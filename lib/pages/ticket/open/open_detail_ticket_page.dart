@@ -10,6 +10,7 @@ import 'package:background_location/data/models/check_list.dart';
 import 'package:background_location/data/models/history.dart';
 import 'package:background_location/data/models/location.dart';
 import 'package:background_location/data/models/ticket.dart';
+import 'package:background_location/pages/ticket/open/depart_detail_ticket_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -72,9 +73,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
   Future<void> _initPlatformState() async {
     await _backgroundLocatorHelper.initialize();
     final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
-    setState(() {
-      _isLocationServiceOn = isServiceRunning;
-    });
+    setState(() => _isLocationServiceOn = isServiceRunning);
     if (!_isLocationServiceOn) _startLocationService();
   }
 
@@ -84,10 +83,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
       await _backgroundLocatorHelper.startLocator();
       final isServiceRunning =
           await _backgroundLocatorHelper.isServiceRunning();
-      setState(() {
-        _isLocationServiceOn = isServiceRunning;
-        _lastLocation = null;
-      });
+      setState(() => _isLocationServiceOn = isServiceRunning);
     } else {
       debugPrint('Error check permission');
     }
@@ -223,7 +219,13 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Ticket Updated')),
                   );
-                  Navigator.pop(context, true);
+                  await Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          DepartDetailTicketPage(ticket: ticket),
+                    ),
+                  );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('$e')),
