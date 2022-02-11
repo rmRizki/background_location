@@ -36,6 +36,7 @@ dependencies:
   map_launcher: ^2.1.1
   shared_preferences: ^2.0.12
   sqflite: ^2.0.2
+  image_picker: ^0.8.4+8
   
 dev_dependencies:
   flutter_test:
