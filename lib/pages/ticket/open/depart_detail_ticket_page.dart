@@ -85,9 +85,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
       _lastLocation = _locationList.last;
     }
     final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
-    setState(() {
-      _isLocationServiceOn = isServiceRunning;
-    });
+    setState(() => _isLocationServiceOn = isServiceRunning);
     if (!_isLocationServiceOn) _startLocationService();
   }
 
@@ -97,12 +95,16 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
       await _backgroundLocatorHelper.startLocator();
       final isServiceRunning =
           await _backgroundLocatorHelper.isServiceRunning();
-      setState(() {
-        _isLocationServiceOn = isServiceRunning;
-      });
+      setState(() => _isLocationServiceOn = isServiceRunning);
     } else {
       debugPrint('Error check permission');
     }
+  }
+
+  void _stopLocationService() async {
+    await _backgroundLocatorHelper.unRegisterLocationUpdate();
+    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
+    _isLocationServiceOn = isServiceRunning;
   }
 
   @override
@@ -207,7 +209,8 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                   _databaseHelper.insertData(
                     TableName.history,
                     History(
-                      action: 'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
+                      action:
+                          'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
                       latitude: _lastLocation?.locationDto.latitude.toString(),
                       longitude:
                           _lastLocation?.locationDto.longitude.toString(),
@@ -218,6 +221,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Ticket Updated')),
                   );
+                  _stopLocationService();
                   await Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(

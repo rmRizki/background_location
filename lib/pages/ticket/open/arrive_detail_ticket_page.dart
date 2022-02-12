@@ -1,12 +1,8 @@
 import 'dart:convert';
-import 'dart:isolate';
-import 'dart:ui';
 
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/common/helper.dart';
 import 'package:background_location/data/database_helper.dart';
-import 'package:background_location/data/location/background_locator_helper.dart';
-import 'package:background_location/data/location/location_service_repository.dart';
 import 'package:background_location/data/models/check_list.dart';
 import 'package:background_location/data/models/history.dart';
 import 'package:background_location/data/models/location.dart';
@@ -26,54 +22,19 @@ class ArriveDetailTicketPage extends StatefulWidget {
 }
 
 class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
-  final _port = ReceivePort();
-  final _backgroundLocatorHelper = BackgroundLocatorHelper();
   final _databaseHelper = DatabaseHelper();
   final _checkList = <CheckListItem>[];
   LocationModel? _lastLocation;
-  bool _isLocationServiceOn = false;
   SharedPreferences? _sharedPreferences;
 
   @override
   void initState() {
-    if (IsolateNameServer.lookupPortByName(
-          LocationServiceRepository.isolateName,
-        ) !=
-        null) {
-      IsolateNameServer.removePortNameMapping(
-        LocationServiceRepository.isolateName,
-      );
-    }
-
-    IsolateNameServer.registerPortWithName(
-      _port.sendPort,
-      LocationServiceRepository.isolateName,
-    );
-
-    _port.listen(
-      (dynamic data) async {
-        await _updateLocationData(data);
-      },
-    );
-    _initPlatformState();
-
+    _getLastLocation();
     _getChecklistData();
     super.initState();
   }
 
-  Future<void> _updateLocationData(LocationModel? location) async {
-    await _backgroundLocatorHelper.updateNotificationText(
-      location?.locationDto,
-    );
-    setState(() {
-      if (location != null) {
-        _lastLocation = location;
-      }
-    });
-  }
-
-  Future<void> _initPlatformState() async {
-    await _backgroundLocatorHelper.initialize();
+  Future<void> _getLastLocation() async {
     _sharedPreferences = await SharedPreferences.getInstance();
     final encodedLocationList =
         _sharedPreferences?.getStringList('location') ?? [];
@@ -85,27 +46,6 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
       );
       _lastLocation = locationList.last;
     }
-    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
-    setState(() => _isLocationServiceOn = isServiceRunning);
-    if (!_isLocationServiceOn) _startLocationService();
-  }
-
-  void _startLocationService() async {
-    if (_isLocationServiceOn) return;
-    if (await _backgroundLocatorHelper.checkLocationPermission()) {
-      await _backgroundLocatorHelper.startLocator();
-      final isServiceRunning =
-          await _backgroundLocatorHelper.isServiceRunning();
-      setState(() => _isLocationServiceOn = isServiceRunning);
-    } else {
-      debugPrint('Error check permission');
-    }
-  }
-
-  void _stopLocationService() async {
-    await _backgroundLocatorHelper.unRegisterLocationUpdate();
-    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
-    setState(() => _isLocationServiceOn = isServiceRunning);
   }
 
   void _getChecklistData() async {
@@ -215,7 +155,7 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: disableButton || !_isLocationServiceOn
+        onPressed: disableButton
             ? null
             : () async {
                 try {
@@ -241,7 +181,6 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Ticket Updated')),
                   );
-                  _stopLocationService();
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
