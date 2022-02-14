@@ -17,6 +17,7 @@ class HistoryList {
 class History {
   int? id;
   String? action;
+  String? imagePath;
   String? time;
   String? latitude;
   String? longitude;
@@ -25,6 +26,7 @@ class History {
   History({
     this.id,
     this.action,
+    this.imagePath,
     this.time,
     this.latitude,
     this.longitude,
@@ -34,6 +36,7 @@ class History {
   factory History.fromJson(Map<String, dynamic> json) => History(
         id: json['id'] as int?,
         action: json['action'] as String?,
+        imagePath: json['image_path'] as String?,
         time: json['time'] as String?,
         latitude: json['latitude'] as String?,
         longitude: json['longitude'] as String?,
@@ -43,6 +46,7 @@ class History {
   Map<String, dynamic> toJson() => {
         'id': id,
         'action': action,
+        'image_path': imagePath,
         'time': time,
         'latitude': latitude,
         'longitude': longitude,
