@@ -37,7 +37,9 @@ dependencies:
   shared_preferences: ^2.0.12
   sqflite: ^2.0.2
   image_picker: ^0.8.4+8
-  
+  flutter_bloc: ^8.0.1
+  equatable: ^2.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
