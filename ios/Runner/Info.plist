@@ -32,6 +32,10 @@
 	<string>Location service needed.</string>
     <key>NSLocationUsageDescription</key>
     <string>Older devices need location.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app need photo library to select and save your photo.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app need camera to take photo from your device.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
