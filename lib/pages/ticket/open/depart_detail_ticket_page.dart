@@ -222,12 +222,14 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                     const SnackBar(content: Text('Ticket Updated')),
                   );
                   _stopLocationService();
-                  await Navigator.pushReplacement(
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
                           ArriveDetailTicketPage(ticket: ticket),
                     ),
+                  ).then(
+                    (value) => Navigator.pop(context),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(

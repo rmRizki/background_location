@@ -235,12 +235,14 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Ticket Updated')),
                   );
-                  await Navigator.pushReplacement(
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
                           DepartDetailTicketPage(ticket: ticket),
                     ),
+                  ).then(
+                    (value) => Navigator.pop(context),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
