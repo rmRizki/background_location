@@ -22,7 +22,12 @@ class DatabaseHelper {
     final path = await getDatabasesPath();
     final databasePath = '$path/trackticket.db';
 
-    var db = await openDatabase(databasePath, version: 1, onCreate: _onCreate);
+    var db = await openDatabase(
+      databasePath,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
     return db;
   }
 
@@ -56,6 +61,14 @@ class DatabaseHelper {
         ticket_id INTEGER
       );
     ''');
+
+    _onUpgrade(db, version, version);
+  }
+
+  void _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    await db.execute(
+      "ALTER TABLE ${TableName.history} ADD COLUMN image_path TEXT;",
+    );
   }
 
   Future<int> insertData(String table, Map<String, dynamic> value) async {
