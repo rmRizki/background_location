@@ -100,6 +100,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
       setState(() => _isLocationServiceOn = isServiceRunning);
     } else {
       debugPrint('Error check permission');
+      Navigator.pop(context);
     }
   }
 

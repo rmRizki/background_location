@@ -98,6 +98,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
       setState(() => _isLocationServiceOn = isServiceRunning);
     } else {
       debugPrint('Error check permission');
+      Navigator.pop(context);
     }
   }
 
