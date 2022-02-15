@@ -200,6 +200,8 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
             ? null
             : () async {
                 try {
+                  final imagePath = await Helper.takePhoto();
+                  if (imagePath == null || imagePath.isEmpty) return;
                   ticket.arrivalStatus = ArrivalStatus.arrived.name;
                   await _databaseHelper.updateData(
                     TableName.ticket,
@@ -211,6 +213,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                     History(
                       action:
                           'Ticket: ${ticket.title} : ${ticket.arrivalStatus}',
+                      imagePath: imagePath,
                       latitude: _lastLocation?.locationDto.latitude.toString(),
                       longitude:
                           _lastLocation?.locationDto.longitude.toString(),
