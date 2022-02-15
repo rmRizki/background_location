@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:background_location/common/constant.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/check_list.dart';
 import 'package:background_location/data/models/history.dart';
 import 'package:background_location/data/models/ticket.dart';
+import 'package:background_location/pages/image_viewer/image_viewer_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:map_launcher/map_launcher.dart';
@@ -157,32 +160,55 @@ class _SolvedDetailTicketPageState extends State<SolvedDetailTicketPage> {
     final latitude = double.tryParse(history.latitude ?? '0');
     final longitude = double.tryParse(history.longitude ?? '0');
     final labelText = '${history.time} -> $latitude,$longitude)}';
+    final imagePath = history.imagePath;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        title: Text(
-          history.action ?? '-',
-          style: Theme.of(context).textTheme.bodyText2,
-        ),
-        subtitle: Text(labelText),
-        onTap: () async {
-          if (await MapLauncher.isMapAvailable(MapType.google) ?? false) {
-            await MapLauncher.showMarker(
-              mapType: MapType.google,
-              coords: Coords(latitude ?? 0, longitude ?? 0),
-              title: "Detected Location",
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Failed to open map',
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (imagePath != null)
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ImageViewerPage(imagePath: imagePath),
+                  ),
+                );
+              },
+              child: Image.file(
+                File(imagePath),
+                height: 124,
+                width: 124,
+                fit: BoxFit.cover,
               ),
-            );
-          }
-        },
-        trailing: const Icon(Icons.call_made_sharp, size: 16),
+            ),
+          ListTile(
+            title: Text(
+              history.action ?? '-',
+              style: Theme.of(context).textTheme.bodyText2,
+            ),
+            subtitle: Text(labelText),
+            onTap: () async {
+              if (await MapLauncher.isMapAvailable(MapType.google) ?? false) {
+                await MapLauncher.showMarker(
+                  mapType: MapType.google,
+                  coords: Coords(latitude ?? 0, longitude ?? 0),
+                  title: "Detected Location",
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Failed to open map',
+                    ),
+                  ),
+                );
+              }
+            },
+            trailing: const Icon(Icons.call_made_sharp, size: 16),
+          ),
+        ],
       ),
     );
   }
