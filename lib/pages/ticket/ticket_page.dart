@@ -1,4 +1,5 @@
 import 'package:background_location/common/constant.dart';
+import 'package:background_location/common/file_util.dart';
 import 'package:background_location/data/database_helper.dart';
 import 'package:background_location/data/models/ticket.dart';
 import 'package:background_location/pages/location_log/location_log_page.dart';
@@ -139,6 +140,7 @@ class _TicketPageState extends State<TicketPage> {
                   await _databaseHelper.removeDataByQuery(TableName.ticket);
                   await _databaseHelper.removeDataByQuery(TableName.checklist);
                   await _databaseHelper.removeDataByQuery(TableName.history);
+                  await FileUtil().deleteAllFile(folder: 'media');
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('All Data Deleted')),
                   );
