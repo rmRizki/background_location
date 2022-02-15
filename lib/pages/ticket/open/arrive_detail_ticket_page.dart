@@ -24,6 +24,7 @@ class ArriveDetailTicketPage extends StatefulWidget {
 class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
   final _databaseHelper = DatabaseHelper();
   final _checkList = <CheckListItem>[];
+  final _noteEdtController = TextEditingController();
   LocationModel? _lastLocation;
   SharedPreferences? _sharedPreferences;
 
@@ -64,10 +65,114 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
     });
   }
 
+  void _takePhoto() async {
+    final imagePath = await Helper.takePhoto();
+    if (imagePath == null || imagePath.isEmpty) return;
+    try {
+      await _databaseHelper.insertData(
+        TableName.history,
+        History(
+          action: 'Add Photo',
+          imagePath: imagePath,
+          latitude: _lastLocation?.locationDto.latitude.toString(),
+          longitude: _lastLocation?.locationDto.longitude.toString(),
+          time: Helper.formatDateLog(DateTime.now()),
+          ticketId: widget.ticket.id,
+        ).toJson(),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Photo Saved')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    }
+  }
+
+  void _addNote() async {
+    final result = await _showAddNoteDialog(context);
+    if (result is bool && result) {
+      try {
+        await _databaseHelper.insertData(
+          TableName.history,
+          History(
+            action: 'Note: ${_noteEdtController.text}',
+            latitude: _lastLocation?.locationDto.latitude.toString(),
+            longitude: _lastLocation?.locationDto.longitude.toString(),
+            time: Helper.formatDateLog(DateTime.now()),
+            ticketId: widget.ticket.id,
+          ).toJson(),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Note Saved')),
+        );
+        _noteEdtController.clear();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+    }
+  }
+
+  Future<bool?> _showAddNoteDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Some Note'),
+          content: TextField(
+            controller: _noteEdtController,
+            decoration: const InputDecoration(
+              hintText: "Type Something...",
+            ),
+            maxLines: 3,
+            minLines: 1,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () {
+                if (_noteEdtController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Field cannot be empty')),
+                  );
+                  Navigator.pop(context, false);
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ticket Detail (Arrived)')),
+      appBar: AppBar(
+        title: const Text('Ticket Detail (Arrived)'),
+        actions: [
+          IconButton(
+            onPressed: _takePhoto,
+            icon: const Icon(Icons.camera_alt),
+          ),
+          IconButton(
+            onPressed: _addNote,
+            icon: const Icon(Icons.text_snippet),
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
