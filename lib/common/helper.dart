@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:background_location/common/file_util.dart';
 import 'package:background_location/data/models/location.dart';
 import 'package:background_locator/location_dto.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Helper {
   static String setLogPosition(LocationModel data) {
@@ -25,5 +27,22 @@ class Helper {
     return dp(locationDto.latitude, 4).toString() +
         " " +
         dp(locationDto.longitude, 4).toString();
+  }
+
+  static Future<String?> takePhoto() async {
+    final photo = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+    );
+
+    if (photo != null) {
+      final filePath = await FileUtil().getFilePath(
+        format: '.jpeg',
+        folder: 'media',
+      );
+      await photo.saveTo(filePath);
+      return filePath;
+    } else {
+      return null;
+    }
   }
 }
