@@ -197,7 +197,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: !_isLocationServiceOn
+        onPressed: !_isLocationServiceOn || _lastLocation == null
             ? null
             : () async {
                 try {

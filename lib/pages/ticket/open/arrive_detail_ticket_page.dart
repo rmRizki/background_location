@@ -260,7 +260,7 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: disableButton
+        onPressed: disableButton || _lastLocation == null
             ? null
             : () async {
                 try {

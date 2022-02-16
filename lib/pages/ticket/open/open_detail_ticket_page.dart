@@ -211,7 +211,9 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: disableButton || !_isLocationServiceOn
+        onPressed: disableButton ||
+                !_isLocationServiceOn ||
+                _lastLocation == null
             ? null
             : () async {
                 try {
