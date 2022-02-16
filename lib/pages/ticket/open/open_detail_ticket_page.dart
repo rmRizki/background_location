@@ -78,7 +78,7 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
     final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
     _sharedPreferences = await SharedPreferences.getInstance();
     final encodedLocationList =
-        _sharedPreferences?.getStringList('location') ?? [];
+        _sharedPreferences?.getStringList(SharedPrefKey.location) ?? [];
     final locationList = <LocationModel>[];
     if (encodedLocationList.isNotEmpty) {
       locationList.clear();

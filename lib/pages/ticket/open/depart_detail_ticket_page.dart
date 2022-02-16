@@ -76,7 +76,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
     await _backgroundLocatorHelper.initialize();
     _sharedPreferences = await SharedPreferences.getInstance();
     final encodedLocationList =
-        _sharedPreferences?.getStringList('location') ?? [];
+        _sharedPreferences?.getStringList(SharedPrefKey.location) ?? [];
     if (encodedLocationList.isNotEmpty) {
       _locationList.clear();
       _locationList.addAll(

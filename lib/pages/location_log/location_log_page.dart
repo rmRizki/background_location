@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:background_location/common/constant.dart';
 import 'package:background_location/common/helper.dart';
 import 'package:background_location/data/location/background_locator_helper.dart';
 import 'package:background_location/data/location/location_service_repository.dart';
@@ -72,7 +73,7 @@ class _LocationLogPageState extends State<LocationLogPage> {
     await _backgroundLocatorHelper.initialize();
     _sharedPreferences = await SharedPreferences.getInstance();
     final encodedLocationList =
-        _sharedPreferences?.getStringList('location') ?? [];
+        _sharedPreferences?.getStringList(SharedPrefKey.location) ?? [];
     if (encodedLocationList.isNotEmpty) {
       _locationList.clear();
       _locationList.addAll(

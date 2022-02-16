@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
+import 'package:background_location/common/constant.dart';
 import 'package:background_location/common/helper.dart';
 import 'package:background_location/data/models/location.dart';
 import 'package:background_locator/location_dto.dart';
@@ -51,7 +52,7 @@ class LocationServiceRepository {
     _locationStringList.add(jsonEncode(location.toJson()));
 
     final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setStringList('location', _locationStringList);
+    sharedPreferences.setStringList(SharedPrefKey.location, _locationStringList);
 
     send?.send(location);
   }
