@@ -4,6 +4,11 @@ class TableName {
   static const history = 'history';
 }
 
+class SharedPrefKey {
+  static const location = 'location';
+  static const lastLocation = 'last_location';
+}
+
 enum ArrivalStatus {
   standby,
   departed,
