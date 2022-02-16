@@ -159,7 +159,7 @@ class _SolvedDetailTicketPageState extends State<SolvedDetailTicketPage> {
   Widget _buildLocationItem(History history) {
     final latitude = double.tryParse(history.latitude ?? '0');
     final longitude = double.tryParse(history.longitude ?? '0');
-    final labelText = '${history.time} -> $latitude,$longitude)}';
+    final labelText = '${history.time} -> $latitude,$longitude';
     final imagePath = history.imagePath;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
