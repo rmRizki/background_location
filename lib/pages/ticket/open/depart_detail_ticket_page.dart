@@ -102,6 +102,15 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
     }
   }
 
+  void _saveLastLocation() async {
+    if (_lastLocation == null) return;
+    final sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString(
+      SharedPrefKey.lastLocation,
+      jsonEncode(_lastLocation?.toJson()),
+    );
+  }
+
   void _stopLocationService() async {
     await _backgroundLocatorHelper.unRegisterLocationUpdate();
     final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
@@ -225,6 +234,7 @@ class _DepartDetailTicketPageState extends State<DepartDetailTicketPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Ticket Updated')),
                   );
+                  _saveLastLocation();
                   _stopLocationService();
                   await Navigator.push(
                     context,

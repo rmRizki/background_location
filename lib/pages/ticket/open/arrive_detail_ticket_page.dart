@@ -26,7 +26,6 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
   final _checkList = <CheckListItem>[];
   final _noteEdtController = TextEditingController();
   LocationModel? _lastLocation;
-  SharedPreferences? _sharedPreferences;
 
   @override
   void initState() {
@@ -36,16 +35,11 @@ class _ArriveDetailTicketPageState extends State<ArriveDetailTicketPage> {
   }
 
   Future<void> _getLastLocation() async {
-    _sharedPreferences = await SharedPreferences.getInstance();
-    final encodedLocationList =
-        _sharedPreferences?.getStringList('location') ?? [];
-    final locationList = <LocationModel>[];
-    if (encodedLocationList.isNotEmpty) {
-      locationList.clear();
-      locationList.addAll(
-        encodedLocationList.map((e) => LocationModel.fromJson(jsonDecode(e))),
-      );
-      _lastLocation = locationList.last;
+    final sharedPreferences = await SharedPreferences.getInstance();
+    final encodedLocation =
+        sharedPreferences.getString(SharedPrefKey.lastLocation) ?? '';
+    if (encodedLocation.isNotEmpty) {
+      _lastLocation = LocationModel.fromJson(jsonDecode(encodedLocation));
     }
   }
 
