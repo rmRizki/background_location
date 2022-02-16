@@ -120,37 +120,67 @@ class _OpenDetailTicketPageState extends State<OpenDetailTicketPage> {
     });
   }
 
+  void _stopLocationService() async {
+    await _backgroundLocatorHelper.unRegisterLocationUpdate();
+    final isServiceRunning = await _backgroundLocatorHelper.isServiceRunning();
+    _isLocationServiceOn = isServiceRunning;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ticket Detail (Preparation)')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.ticket.title ?? '-',
-              style: Theme.of(context).textTheme.headline5,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.ticket.description ?? '-',
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
-            const SizedBox(height: 8),
-            const Divider(thickness: 1.5),
-            const SizedBox(height: 8),
-            const Text('Checklist Before Departure : '),
-            const SizedBox(height: 8),
-            Expanded(
-              child: _checkList.isEmpty
-                  ? const Text('-- None --')
-                  : _buildCheckList(),
-            ),
-            _buildDepartButton(),
-          ],
+    return WillPopScope(
+      onWillPop: () async {
+        _stopLocationService();
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () {
+              _stopLocationService();
+              Navigator.pop(context);
+            },
+          ),
+          title: const Text('Ticket Detail (Preparation)'),
         ),
+        body: _lastLocation == null
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Fetching location data...\nMake sure to activate your location service',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.ticket.title ?? '-',
+                      style: Theme.of(context).textTheme.headline5,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.ticket.description ?? '-',
+                      style: Theme.of(context).textTheme.subtitle1,
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(thickness: 1.5),
+                    const SizedBox(height: 8),
+                    const Text('Checklist Before Departure : '),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: _checkList.isEmpty
+                          ? const Text('-- None --')
+                          : _buildCheckList(),
+                    ),
+                    _buildDepartButton(),
+                  ],
+                ),
+              ),
       ),
     );
   }
